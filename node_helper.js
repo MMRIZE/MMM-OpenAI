@@ -1,4 +1,5 @@
 require('dotenv').config()
+const exec = require('child_process').exec
 const NodeHelper = require('node_helper')
 const { Configuration, OpenAIApi } = require("openai")
 const API_KEY = process.env.OPENAI_API_KEY
@@ -9,7 +10,6 @@ const configuration = new Configuration({
   apiKey: API_KEY,
 })
 
-console.log(configuration)
 const openai = new OpenAIApi(configuration)
 
 module.exports = NodeHelper.create({
@@ -19,80 +19,46 @@ module.exports = NodeHelper.create({
   socketNotificationReceived: function (notification, payload) {
     if (notification === 'REQUEST') {
       this.job(payload).catch((error) => {
-        console.log('oops')
+        console.log(error)
+      })
+    }
+    if (notification == "SHELL_EXEC") {
+      console.log("[OPENAI] shellExec trying:", payload)
+      exec(payload, (error, stdout, stderr)=>{
+        if (error) {
+          console.log("[OPENAI] shellExec error:\n ------ \n", error, "\n ----- \n")
+        }
+        if (stderr) console.log("[OPENAI] shellExec stdErr:\n ------ \n", stderr, "\n ----- \n")
+        console.log("[OPENAI] shellExec stdOut:\n ------ \n", stdout, "\n ----- \n")
       })
     }
   },
 
   job: async function (payload) {
-    let status = false
     let e = null
-    let now = new Date()
-
     let {request, options} = payload
     let response = null
-
-    console.log(request, options)
-
+    console.log('----------------------')
+    console.log(request)
+    console.log(options)
     try {
-      response = (options?.method === 'IMAGE') ?
-        await openai.createImage(request) :
-        await openai.createCompletion(request)
-      console.log('response')
-      console.log(response?.status, response?.statusText, response.data)
+      response = (options?.method === 'IMAGE')
+        ? await openai.createImage(request)
+        : await openai.createCompletion(request)
     } catch (error) {
       console.log('error')
       console.log(error)
       e = error
     } finally {
+      console.log(response?.data ?? e)
       this.sendSocketNotification('RESPONSE', {
         error: e,
-        response: response.data,
+        response: response?.data ?? e,
         request: request,
         options: options,
-        responseTimestamp: Date.now()
+        responseTimestamp: Date.now(),
+        stealth: options.stealth
       })
     }
-
-    
-
-/*
-
-    if (!this.lastRequestTime || ((this.lastRequestTime?.valueOf() ?? 0) + this.requestDelay < now.valueOf())) {
-      try {
-        const response = await openai.createImage({
-          n: payload.n, 
-          prompt:payload.prompt, 
-          size: payload.size,
-          response_format: payload.response_format
-        })
-        this.sendSocketNotification('RESPONSE', {
-          image: response.data.data[0].b64_json,
-          prompt: payload.prompt,
-          id: payload.id,
-          notiKey: payload.notiKey
-        })
-        this.lastRequestTime = new Date()
-        status = true
-      } catch (error) {
-        e = error
-        if (error.response) {
-          console.log('[DALLE] Error; Response Status:', error.response.status)
-          console.log('[DALLE] Error; Response Data', error.response.data)
-        } else {
-          console.log('[DALLE] Error; Response Message', error.message)
-        }
-      }
-    } else {
-      e = '[DALLE] Too frequent request. This request would be ignored.'
-      console.warn(e)
-    }
-    if (!status) this.sendSocketNotification('RESPONSE', {
-      error: e,
-      prompt: payload.prompt,
-      id: payload.id,
-      notiKey: payload.notiKey
-    })
-*/
   }
 })
