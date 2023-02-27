@@ -40,7 +40,6 @@ Module.register('MMM-OpenAI', {
       } else {
         requested = {...defaultObj, ...payload}
       }
-      console.log('REQUESTED', requested)
       if (requested.prompt && typeof requested.prompt === 'string') requested.request.prompt = requested.prompt
       return requested
     },
