@@ -1,17 +1,17 @@
 # MMM-OpenAI
-MagicMirror module for request OpenAI's API
+MagicMirror module for requesting OpenAI's API
 
 > DISCLAIMERS : 
-> 1. This is not a `ChatGPT` module; (OpenAI has not released ChatGPT API yet.). This module is using OpenAI's API for text complement and image generation.
-> 2. I will not implement any `voice` related features into this module directrly, but if you want, you can relay that kinds of modules for your own purpose. 
+> 1. This is not a `ChatGPT` module; (OpenAI has not released ChatGPT API yet.). This module uses OpenAI's API for text completion and image generation.
+> 2. I will not implement any `voice-related` features into this module directly, but if you want, you can relay those kinds of modules for your own purpose. (This module has much preparation to cooperate with other modules.)
 
 ## Screenshot
 
 
 ## Features
-- Request text compliments or image generation from OpenAI with detailed options
+- Request text completions or image generation from OpenAI with detailed options
 - Activation through TelegramBot (built-in by default)
-- Activation with notification (customizable - For developing a new module or For using current module without modification, either possible.)
+- Activation with notification (customizable - For developing a new module or For using the current module without modification, either possible.)
 - Customizable post-process (You might not need to build an external module to handle the response for your own purpose)
 
 ## Installation
@@ -25,18 +25,18 @@ npm install
 
 ## To get the API key and setup in your mirror
 ### API Keys
-1. Go to `openai.com` then signup/signin. (It's better to read the Pricing page first.)
+1. Go to `openai.com` and then sign-up/sign-in. (It's better to read the Pricing page first.)
 2. You can acquire API Key in your account menu > User section. (https://platform.openai.com/account/api-keys)
 3. Click `+ Create new secret key` and copy the key created to somewhere **IMPORTANT** *Once the key is created, you cannot see the key again, So you must copy the key when it is created.*
-4. You can also get `Organization ID` from `ORGANIZATION` section.
+4. You can also get an `Organization ID` from the `ORGANIZATION` section.
 
 ### Env setting
 1. Go to the root directory of MagicMirror (Usually `~/MagicMirror`)
-2. Open `.env` with your favorite editor. (If there is not, create one by yourself.)
+2. Open `.env` with your favourite editor. (If there is not, create one by yourself.)
 ```sh
 cd ~/MagicMirror
 ls .env
-vi .env    # Or whatever text editor you like (open existing .env file or create new one)
+vi .env    # Or whatever text editor you like (open existing .env file or create a new one)
 ```
 
 Add these lines and save the `.env` file;
@@ -103,8 +103,8 @@ All the properties are omittable, and if omitted, a default value will be applie
 |**property**|**default**|**description**|
 |---|---|---|
 |`stealth`| false | Deciding whether to display the response from OpenAI.|
-|`imageAreaHeight`| '400px' | Of course you can ignore this value by custom.css overriding. (Width of module would be determined by it's position usually.) |
-|`resultLife` | 600000 (ms) | After this time, the response will be faded out. (when you set `stealth` property to `false`). If you set this value to 0, the displayed response are not faded until getting new response. |
+|`imageAreaHeight`| '400px' | Of course you can ignore this value by custom.css overriding. (Width of a module would be determined by it's position usually.) |
+|`resultLife` | 600000 (ms) | After this time, the response will be faded out. (when you set the `stealth` property to `false`). If you set this value to 0, the displayed response are not faded until getting new response. |
 |`defaultRequest` | { text, image } | See the `Request Format` section. |
 |`notificationHook` | [ Array of notificaiton definition (`Object` or `Function`) ] | See the `Notification Hooking` section. |
 |`postProcessing` | callback function | See the `PostProcessing` section. |
