@@ -122,7 +122,6 @@ Module.register('MMM-OpenAI', {
     let dom = document.createElement('div')
     dom.classList.add('bodice', 'OpenAI')
     if (!this.lastResponse) return dom
-    console.log(this.lastResponse)
     if (this.lastResponse.stealth) return dom
     let {error, response, request, options, responseTime} = this.lastResponse
     if (error) return dom
@@ -189,7 +188,6 @@ Module.register('MMM-OpenAI', {
   },
 
   request: function({method, requestable, handler = null, stealth = this.config.stealth}) {
-    console.log(stealth, requestable.stealth, this.config.stealth)
     let t = (method === 'TEXT') ? 'text' : ((method === 'IMAGE') ? 'image' : false)
     if (!t) return false
     let id = Date.now()
@@ -227,7 +225,6 @@ Module.register('MMM-OpenAI', {
         console.log('[OPENAI] Response without handler (Usually timedout or missing callback)', payload.response)
       }
       if (typeof this.config.postProcessing === 'function') {
-        console.log('POSTPROCESSING', this.postProcessor, payload)
         this.config.postProcessing(this.postProcessor, payload)
       }
 
@@ -253,9 +250,8 @@ Module.register('MMM-OpenAI', {
           if (typeof requestable?.callback === 'function') requestable.callback(false)
           return
         }
-        console.log('REQUESTABLE', requestable)
         let r = this.request({
-          method: requestable.method ?? null,
+          method: requestable?.method ?? null,
           requestable: requestable.request, 
           handler: requestable?.callback ?? null,
           stealth: requestable?.stealth || this.config.stealth
