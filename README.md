@@ -135,7 +135,7 @@ If you are using `MMM-TelegramBot` or `EXT-TelegramBot` (both are the same thing
 
 
 ### 2. Using Built-in Notification
-> From here, you should be a module developer or at least you know what you are doing. 
+> **From here, you should be a module developer or at least you know what you are doing.**
 
 `OPENAI_REQUEST` is pre-defined default incoming notification to request a response from OpenAI with your prompt in an external module. If you are a module developer and when you want to use OpenAI in your module also, this feature would be help.
 - Text Only (the simplest)
