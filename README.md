@@ -6,6 +6,9 @@ MagicMirror module for requesting OpenAI's API
 > 2. I will not implement any `voice-related` features into this module directly, but if you want, you can relay those kinds of modules for your own purpose. (This module has much preparation to cooperate with other modules.)
 
 ## Screenshot
+![Text Completion](https://raw.githubusercontent.com/MMRIZE/public_ext_storage/main/MMM-OpenAI/openai_scr_txtai.png)
+![Image generation](https://raw.githubusercontent.com/MMRIZE/public_ext_storage/main/MMM-OpenAI/openai_scr_imgai.png)
+
 
 
 ## Features
