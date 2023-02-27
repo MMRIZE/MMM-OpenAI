@@ -13,7 +13,7 @@ MagicMirror module for requesting OpenAI's API
 
 ## Features
 - Request text completions or image generation from OpenAI with detailed options
-- Activation through TelegramBot (built-in by default)
+- Activation through TelegramBot (defult behaviour)
 - Activation with notification (customizable - For developing a new module or For using the current module without modification, either possible.)
 - Customizable post-process (You might not need to build an external module to handle the response for your own purpose)
 
