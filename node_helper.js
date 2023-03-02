@@ -35,22 +35,21 @@ module.exports = NodeHelper.create({
   },
 
   job: async function (payload) {
+    const jobMap = {
+      'IMAGE': 'createImage',
+      'TEXT': 'createCompletion',
+      'CHAT': 'createChatCompletion'
+    }
     let e = null
     let {request, options} = payload
     let response = null
-    console.log('----------------------')
-    console.log(request)
-    console.log(options)
     try {
-      response = (options?.method === 'IMAGE')
-        ? await openai.createImage(request)
-        : await openai.createCompletion(request)
+      response = await openai[jobMap[options.method]](request)
     } catch (error) {
       console.log('error')
       console.log(error)
       e = error
     } finally {
-      console.log(response?.data ?? e)
       this.sendSocketNotification('RESPONSE', {
         error: e,
         response: response?.data ?? e,

@@ -74,6 +74,24 @@ Module.register('MMM-OpenAI', {
         n: 1,
         size: '512x512', // '256x256', '512x512'
         response_format:'url', // 'b64_json'
+      },
+      chat: {
+        model: 'gpt-3.5-turbo',
+        messages: [],
+        max_tokens: 512,
+        /* // You should know what you are doing.
+        temperature: 1, // 0~2
+        top_p: 0,
+        suffix: null,
+        stream: false, // Not prepared for this result, RESERVED. (Don't use it)
+        logprobs: null,
+        echo: false,
+        stop: "\n",
+        presence_penalty: 0,
+        best_of: 1, //Warning; consuming tokens,
+        frequency_penalty: 0,
+
+*/
       }
     },
 
@@ -91,7 +109,11 @@ Module.register('MMM-OpenAI', {
     },
 
     telegramCommandText: 'txtai',
-    telegramCommandImage: 'imgai'
+    telegramCommandImage: 'imgai',
+    telegramCommandChat: 'chatai',
+    telegramCommandChat: 'chatainew',
+    defaultChatInstruction: "Your name is Marv and you are a chatbot that reluctantly answers questions with sarcastic responses.",
+
   },
 
   getStyles: function () {
@@ -148,6 +170,7 @@ Module.register('MMM-OpenAI', {
   },
 
   getCommands: function(commander) {
+    if (!this?.tgDialog) this.tgDialog = []
     commander.add({
       command: this.config.telegramCommandText,
       description: 'Ask to OpenAI with text',
@@ -158,6 +181,35 @@ Module.register('MMM-OpenAI', {
       description: 'Request image to OpenAI',
       callback: 'command_image'
     })
+    commander.add({
+      command: this.config.telegramCommandChat,
+      description: `ChatGPT implement. To start new dialog, type "\\ ${this.config.telegramCommandChat} new"`,
+      callback: 'command_chat'
+    })
+  },
+
+  command_chat: function(command, handler) {
+    if (handler.args) {
+      if (handler.args === 'new') {
+        this.tgDialog = [{
+          role: 'system',
+          content: this.config.defaultChatInstruction
+        }]
+        handler.reply('TEXT', 'New dialog session starts.')
+        return
+      }
+      
+      let message = [...this.tgDialog, {
+        role: 'user',
+        content: 'handler.args'
+      }]
+      let request = { message }
+      this.request({
+        method: 'CHAT',
+        requestable: request,
+        handler
+      })
+    }
   },
 
   command_text: function(command, handler) {
@@ -187,7 +239,8 @@ Module.register('MMM-OpenAI', {
   },
 
   request: function({method, requestable, handler = null, stealth = this.config.stealth}) {
-    let t = (method === 'TEXT') ? 'text' : ((method === 'IMAGE') ? 'image' : false)
+    const methods = ['TEXT', 'IMAGE', 'CHAT']
+    let t = (methods.includes(method)) ? method.toLowerCase() : false
     if (!t) return false
     let id = Date.now()
     if (handler) this.requestPool.set(id, handler)

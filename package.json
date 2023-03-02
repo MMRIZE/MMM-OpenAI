@@ -1,0 +1,29 @@
+{
+  "name": "mmm-openai",
+  "version": "1.0.0",
+  "description": "MagicMirror module for requesting OpenAI's API",
+  "main": "MMM-OpenAI.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MMRIZE/MMM-OpenAI.git"
+  },
+  "keywords": [
+    "MM",
+    "MagicMirror",
+    "OpenAI",
+    "ChatGPT"
+  ],
+  "author": "eouia0819@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MMRIZE/MMM-OpenAI/issues"
+  },
+  "homepage": "https://github.com/MMRIZE/MMM-OpenAI#readme",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "openai": "^3.2.1"
+  }
+}
