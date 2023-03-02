@@ -402,7 +402,7 @@ helper.shellExec('sudo reboot now')
 
 
 ## For developer : Chatting 
-- Dislike `text completion` and `image generation`, `CHAT` might needs to keep a history of conversation session. To achieve that, OpenAI choose `To carry all the conversations` on each request.
+- Unlike `text completion` and `image generation`, `CHAT` might need to keep a history of conversation session. To achieve that, OpenAI chooses `To carry all the conversations` on each request.
 ```js
 this.sendNotification('OPENAI_REQUEST', {
   method: 'CHAT',
