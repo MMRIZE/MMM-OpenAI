@@ -50,14 +50,15 @@ module.exports = NodeHelper.create({
       console.log(error)
       e = error
     } finally {
-      this.sendSocketNotification('RESPONSE', {
+      let r = {
         error: e,
         response: response?.data ?? e,
         request: request,
         options: options,
         responseTimestamp: Date.now(),
-        stealth: options.stealth
-      })
+        stealth: options.stealth,
+      }
+      this.sendSocketNotification('RESPONSE', r)
     }
   }
 })

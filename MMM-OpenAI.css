@@ -27,7 +27,8 @@
   padding: 5px;
 }
 
-.OpenAI .response.response_text {
+.OpenAI .response.responseText,
+.OpenAI .response.responseChat {
   background-image: url('/modules/MMM-OpenAI/resources/openai_bk.png');
   background-size: 32px 32px;
   background-position: top 5px left 5px;
@@ -36,7 +37,7 @@
   text-align: left;
 }
 
-.OpenAI .response.response_image {
+.OpenAI .response.responseImage {
   height: var(--imageAreaHeight);
   background-position: center, center;
   background-repeat: no-repeat;

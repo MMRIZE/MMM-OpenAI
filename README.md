@@ -2,12 +2,15 @@
 MagicMirror module for requesting OpenAI's API
 
 > DISCLAIMERS : 
-> 1. This is not a `ChatGPT` module; (OpenAI has not released ChatGPT API yet.). This module uses OpenAI's API for text completion and image generation.
+>  1. <strike>This is not a `ChatGPT` module; (OpenAI has not released ChatGPT API yet.). This module uses OpenAI's API for text completion and image generation.</strike> Chat API is released on 2023. March 1st.
 > 2. I will not implement any `voice-related` features into this module directly, but if you want, you can relay those kinds of modules for your own purpose. (This module has much preparation to cooperate with other modules.)
 
 ## Screenshot
 ![Text Completion](https://raw.githubusercontent.com/MMRIZE/public_ext_storage/main/MMM-OpenAI/openai_scr_txtai.png)
+
 ![Image generation](https://raw.githubusercontent.com/MMRIZE/public_ext_storage/main/MMM-OpenAI/openai_scr_imgai.png)
+
+![Chat](https://raw.githubusercontent.com/MMRIZE/public_ext_storage/main/MMM-OpenAI/openai_chat_marv.png)
 
 
 
@@ -16,6 +19,7 @@ MagicMirror module for requesting OpenAI's API
 - Activation through TelegramBot (defult behaviour)
 - Activation with notification (customizable - For developing a new module or For using the current module without modification, either possible.)
 - Customizable post-process (You might not need to build an external module to handle the response for your own purpose)
+- Chatting implemented.
 
 ## Installation
 
@@ -77,6 +81,12 @@ If you are not a developer, this would be enough for you. Trust me.
           size: '512x512', // '256x256', '512x512'
           response_format:'url', // 'b64_json'
           ...
+        },
+        chat: {
+          model: 'gpt-3.5-turbo',
+          messages: [],
+          max_tokens: 4000,
+          ...
         }
       },
 
@@ -94,7 +104,10 @@ If you are not a developer, this would be enough for you. Trust me.
       },
 
       telegramCommandText: 'txtai',
-      telegramCommandImage: 'imgai'
+      telegramCommandImage: 'imgai',
+      telegramCommandChat: 'chatai',
+      telegramChatReset: 'reset',
+      defaultChatInstruction: "Your name is Marvin and you are a paranoid android that reluctantly answers questions with sarcastic responses.",
 	}
 },
 ```
@@ -113,10 +126,12 @@ All the properties are omittable, and if omitted, a default value will be applie
 |`postProcessing` | callback function | See the `PostProcessing` section. |
 |`telegramCommandText` | 'txtai' | telegramBot command for text compliment request |
 |`telegramCommandImage` | 'imgai' | telegramBot command for image generation request |
-
+|`telegramCommandChat` | 'chatai' | telegramBot command for chatting (ChatCPT) |
+|`telegramChatReset` | 'reset' | a keyword for reset current chat session and give a new initial instruction |
+|`defaultChatInstruction`| text | Initial instruction of chatting session. You can give a character to AI |
 ## How to use
 ### 1. Using TelegramBot
-If you are using `MMM-TelegramBot` or `EXT-TelegramBot` (both are the same thing...), the commands would be added.
+If you are using `MMM-TelegramBot` or `EXT-TelegramBot` (whatever), the commands would be added.
 
 - `/txtai YOUR_PROMPT` : To get text compliments from your prompt
 ```
@@ -127,9 +142,18 @@ If you are using `MMM-TelegramBot` or `EXT-TelegramBot` (both are the same thing
 ```
 /imgai Santa Claus in a blue coat
 ```
+- `/chatai`
+  - `/chatai` or `/chatai reset`: Reset and start new dialog session with default instruction
+  - `/chatai reset INSTRUCTION` : Reset and start new dialog session with custom instruction
+  ```
+  /chatai reset You are my smart and nice assistant and your name is Suji and we will say Korean from now on.
+  ```
+  - `/chatai YOUR_PROMPT` : Your conversation to the AI
+  ```
+  /chatai Summarize me "Star Wars Episode IV"
+  ```
 
-
-> You can adjust the configuration to change the command `txtai` and `imgai` to whatever commands you like.
+> You can adjust the configuration to change the command `txtai`, `chatai` and `imgai` to whatever commands you like.
 
 
 
@@ -195,7 +219,6 @@ The request object has this structure; (Every attribute can be omitted and then 
   callback: (response) => {
     // Doing something in your module with the response when the response arrives from OpenAI.
   },
-  prompt: "your prompt to request....", // Your prompt to request to OpenAI here, or,... 
   request: {
     prompt: "your prompt here also...", // You can describe your prompt here also. ()
     ... // other options for OpenAI API request.
@@ -211,7 +234,7 @@ request: {
   n: 1, // Warning; consumeing tokens
   max_tokens: 512, // Warning; consuming tokens
   
-  // You should know what you are doing to use below options.
+  /* // You should know what you are doing to use below options.
   temperature: 1, // 0~2
   top_p: 0,
   suffix: null,
@@ -221,9 +244,10 @@ request: {
   presence_penalty: 0,
   best_of: 1, //Warning; consuming tokens
   //stream: false, // Not prepared for this result, RESERVED. (Don't use it)
+  */
 },
 ```
-https://platform.openai.com/docs/api-reference/completions/create#completions/create-model
+https://platform.openai.com/docs/api-reference/completions/create
 
 #### detailed options for image generation
 ```js
@@ -234,7 +258,30 @@ request: {
   response_format:'url', // 'b64_json', 'url' available
 }
 ```
-https://platform.openai.com/docs/api-reference/images/create#images/create-prompt
+https://platform.openai.com/docs/api-reference/images/create
+
+#### detailed options for Chatting
+```js
+request: {
+  model: 'gpt-3.5-turbo',
+  messages: [],
+  max_tokens: 4000,
+  /* // You should know what you are doing.
+  temperature: 1, // 0~2
+  top_p: 0,
+  suffix: null,
+  stream: false, // Not prepared for this result, RESERVED. (Don't use it)
+  logprobs: null,
+  echo: false,
+  stop: "\n",
+  presence_penalty: 0,
+  best_of: 1, //Warning; consuming tokens,
+  frequency_penalty: 0,
+  //stream: false, // Not prepared for this result, RESERVED. (Don't use it)
+  */
+}
+```
+https://platform.openai.com/docs/api-reference/chat/create
 
 *If therre is mistypo or invalid attribute/value, the request would be failed and will response error.*
 
@@ -294,6 +341,29 @@ The attribute `response` might have a different object by `Text Completion` or `
 }
 ```
 
+#### chatting completion response
+> **WARNING** The structure of this response is differnt with others.
+```js
+{
+  ... //other common attributes;
+  response: {
+    choices: [
+      {
+        message: {
+          role: 'assistant',
+          content: ' ... Reply from AI ... '
+        },
+        index,
+        finish_reason
+      },
+      { ... },
+    ],
+    ... // other attributes of the response
+  }
+}
+```
+The response of chatting would have `message` object. You might need this object to keep dialog session.
+
 ### 6. Post Processing
 You can add your logic after response receiving to handle that without a help of external module. 
 For example, you can log all the response regardless of which module request it.
@@ -330,11 +400,56 @@ helper.sendNotification('SHOW_ALERT', responseObj.response.choices[0].text)
 helper.shellExec('sudo reboot now')
 ```
 
+
+## For developer : Chatting 
+- Dislike `text completion` and `image generation`, `CHAT` might needs to keep a history of conversation session. To achieve that, OpenAI choose `To carry all the conversations` on each request.
+```js
+this.sendNotification('OPENAI_REQUEST', {
+  method: 'CHAT',
+  request: {
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a smart assistant'
+      },
+      {
+        role: 'user',
+        content: 'Now, my hair is black. remember it.'
+      },
+      {
+        role: 'user',
+        content: 'So, what is my hair color?'
+      }
+    ]
+  },
+  stealth: false,
+  callback: (obj) => {
+    let conversation = [...obj.request.messages, obj.response.choices[0].message]
+    console.log('HISTORY', conversation)
+    // The last message(obj.response.choices[0].message) might be something like this.
+    /*
+    {
+      role: 'assistant',
+      content: 'Your hair is black.'
+    }
+    */
+    // You can use this array of history on next request
+  }
+})
+```
+To continue this session, you may to deliver all the history between you and AI on the next request.
+
+
 ## Note
 - If you make some mistypo or carry invalid request options, you will get error (but not detailed).
 
+
+
 ## History
-### 2022-02-28
+### 1.1.0 (2022-03-02)
+- ADDED : Chatting
+
+### 1.0.0 (2022-02-28)
 Released.
 
 

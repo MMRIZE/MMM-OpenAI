@@ -24,6 +24,7 @@ class PostProcess {
   }
 }
 
+
 Module.register('MMM-OpenAI', {
   defaultNotification: {
     "OPENAI_REQUEST": (payload, sender) => {
@@ -40,7 +41,7 @@ Module.register('MMM-OpenAI', {
       } else {
         requested = {...defaultObj, ...payload}
       }
-      if (requested.prompt && typeof requested.prompt === 'string') requested.request.prompt = requested.prompt
+      if (requested.method !== 'CHAT' && requested.prompt && typeof requested.prompt === 'string') requested.request.prompt = requested.prompt
       return requested
     },
   },
@@ -78,7 +79,7 @@ Module.register('MMM-OpenAI', {
       chat: {
         model: 'gpt-3.5-turbo',
         messages: [],
-        max_tokens: 512,
+        max_tokens: 4000,
         /* // You should know what you are doing.
         temperature: 1, // 0~2
         top_p: 0,
@@ -111,8 +112,8 @@ Module.register('MMM-OpenAI', {
     telegramCommandText: 'txtai',
     telegramCommandImage: 'imgai',
     telegramCommandChat: 'chatai',
-    telegramCommandChat: 'chatainew',
-    defaultChatInstruction: "Your name is Marv and you are a chatbot that reluctantly answers questions with sarcastic responses.",
+    telegramChatReset: 'reset',
+    defaultChatInstruction: "Your name is Marvin and you are a paranoid android that reluctantly answers questions with sarcastic responses.",
 
   },
 
@@ -149,19 +150,22 @@ Module.register('MMM-OpenAI', {
 
     let req = document.createElement('div')
     req.classList.add('prompt')
-    req.innerHTML = request?.prompt
+    req.innerHTML = options?.prompt
 
     let res = document.createElement('div')
     res.classList.add('response')
 
     if (options.method === 'TEXT') {
       res.innerHTML = response.choices[0].text.replace(/^\n\n/, '').replaceAll('\n', '<br/>')
-      res.classList.add('response_text')
+      res.classList.add('responseText')
     } else if (options.method === 'IMAGE') {
       let url = (response.data[0]?.url) ? response.data[0]?.url : `data:image/png;base64,${response.data[0].b64_json}`
       res.style.backgroundImage = `url("${url}")`
       res.style.setProperty('--imageAreaHeight', this.config.imageAreaHeight)
-      res.classList.add('response_image')
+      res.classList.add('responseImage')
+    } else if (options.method === 'CHAT') {
+      res.innerHTML = response.choices[0].message.content
+      res.classList.add('responseChat')
     }
     dom.appendChild(req)
     dom.appendChild(res)
@@ -170,7 +174,6 @@ Module.register('MMM-OpenAI', {
   },
 
   getCommands: function(commander) {
-    if (!this?.tgDialog) this.tgDialog = []
     commander.add({
       command: this.config.telegramCommandText,
       description: 'Ask to OpenAI with text',
@@ -181,35 +184,45 @@ Module.register('MMM-OpenAI', {
       description: 'Request image to OpenAI',
       callback: 'command_image'
     })
+
+    let reset = new RegExp(`(^${this.config.telegramChatReset})?\\s?(.*)$`)
     commander.add({
       command: this.config.telegramCommandChat,
       description: `ChatGPT implement. To start new dialog, type "\\ ${this.config.telegramCommandChat} new"`,
-      callback: 'command_chat'
+      callback: 'command_chat',
+      args_pattern: [reset],
     })
   },
 
   command_chat: function(command, handler) {
-    if (handler.args) {
-      if (handler.args === 'new') {
-        this.tgDialog = [{
-          role: 'system',
-          content: this.config.defaultChatInstruction
-        }]
-        handler.reply('TEXT', 'New dialog session starts.')
-        return
-      }
-      
-      let message = [...this.tgDialog, {
-        role: 'user',
-        content: 'handler.args'
+    const newDialog = (handler, initPrompt = this.config.defaultChatInstruction) => {
+      handler.reply('TEXT', 'New dialog session starts.')
+      this.tgDialog = [{
+        role: 'system',
+        content: initPrompt
       }]
-      let request = { message }
-      this.request({
-        method: 'CHAT',
-        requestable: request,
-        handler
-      })
+      handler.reply('TEXT', '**New Instruction** : ' + initPrompt)
     }
+    if (!handler?.args?.[0]) {
+      newDialog(handler)
+      return
+    }
+    let [ignore, reset, prompt] = handler.args[0]
+    if (reset) {
+      newDialog(handler, prompt || this.config.defaultChatInstruction)
+      return
+    }
+    if (!this.tgDialog) newDialog(handler)
+    this.tgDialog = [...this.tgDialog, {
+      role: 'user',
+      content: prompt 
+    }]
+    let request = { messages: [...this.tgDialog] }
+    this.request({
+      method: 'CHAT',
+      requestable: request,
+      handler,
+    })
   },
 
   command_text: function(command, handler) {
@@ -218,7 +231,7 @@ Module.register('MMM-OpenAI', {
       this.request({
         method: 'TEXT', 
         requestable: request, 
-        handler
+        handler,
       })
     } else {
       handler.reply('There is no prompt to ask to OpenAI.')
@@ -231,23 +244,36 @@ Module.register('MMM-OpenAI', {
       this.request({
         method: 'IMAGE',
         requestable: request,
-        handler
+        handler,
       })
     } else {
       handler.reply('There is no prompt to ask to OpenAI.')
     }
   },
 
-  request: function({method, requestable, handler = null, stealth = this.config.stealth}) {
+  request: function({method, requestable,  handler = null, stealth = this.config.stealth}) {
     const methods = ['TEXT', 'IMAGE', 'CHAT']
     let t = (methods.includes(method)) ? method.toLowerCase() : false
     if (!t) return false
     let id = Date.now()
     if (handler) this.requestPool.set(id, handler)
-    this.sendSocketNotification('REQUEST', {
+
+    let prompt = requestable?.prompt
+    if (method === 'CHAT') {
+      prompt = requestable.messages?.findLast((m) => {
+        return (m.role === 'user')
+      })?.content
+      if (!prompt) {
+        console.log('[OPENAI] Invalid requestable payload', requestable)
+        if (typeof requestable?.callback === 'function') requestable.callback(false)
+        return
+      }
+    }
+    let payload = {
       request: { ...this.config.defaultRequest[t], ...requestable },
-      options: {id, method, stealth}
-    })
+      options: {id, method, stealth, prompt}
+    }
+    this.sendSocketNotification('REQUEST', payload)
     return true
   },
 
@@ -266,8 +292,12 @@ Module.register('MMM-OpenAI', {
             handler.reply('TEXT', 'Something wrong, see the log.')
           } else if (payload.options.method === 'IMAGE') {
             handler.reply('PHOTO_URL', payload.response.data[0].url, { caption: payload.request.prompt })
-          } else {
+          } else if (payload.options.method === 'TEXT'){
             handler.reply('TEXT', payload.response.choices[0].text)
+          } else {
+            let message = payload.response.choices[0].message
+            handler.reply('TEXT', message.content)
+            this.tgDialog.push(message)
           }
         } else {
           console.log('[OPENAI] Invalid Handler)', payload.response)
@@ -297,7 +327,7 @@ Module.register('MMM-OpenAI', {
     for(const [key, factory] of Object.entries(this.notificationSet)) {
       if (notification === key) {
         let requestable = (typeof factory === 'function') ? factory(payload, sender) : ((typeof factory === 'object') ? factory : {})
-        if (!(requestable?.request && requestable.request?.prompt)) {
+        if (!(requestable?.request)) {
           console.log('[OPENAI] Invalid payload', payload)
           if (typeof requestable?.callback === 'function') requestable.callback(false)
           return
@@ -306,7 +336,7 @@ Module.register('MMM-OpenAI', {
           method: requestable?.method ?? null,
           requestable: requestable.request, 
           handler: requestable?.callback ?? null,
-          stealth: requestable?.stealth || this.config.stealth
+          stealth: requestable?.stealth || this.config.stealth,
         })
         if (!r) {
           if (typeof payload.callback === 'function') payload.callback(false)

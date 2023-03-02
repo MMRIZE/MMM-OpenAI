@@ -1,6 +1,6 @@
 {
   "name": "mmm-openai",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MagicMirror module for requesting OpenAI's API",
   "main": "MMM-OpenAI.js",
   "scripts": {
