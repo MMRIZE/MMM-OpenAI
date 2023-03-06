@@ -152,6 +152,7 @@ If you are using `MMM-TelegramBot` or `EXT-TelegramBot` (whatever), the commands
   ```
   /chatai Summarize me "Star Wars Episode IV"
   ```
+  > By default, until new dialog session, AI will remember the conversation with you, but the previous dialog will consume your tokens also on each time and too long conversation session without `reset` may cause error. (Max token 4096)
 
 > You can adjust the configuration to change the command `txtai`, `chatai` and `imgai` to whatever commands you like.
 
@@ -437,7 +438,8 @@ this.sendNotification('OPENAI_REQUEST', {
   }
 })
 ```
-To continue this session, you may to deliver all the history between you and AI on the next request.
+To continue this session, you may to deliver all the history between you and AI on the next request. But you should know this; your previous conversation session will consume your token also. So your 3000 tokens from previous conversation result would cause an error when the response might be over 1100 tokens. (Max. 4096)
+You may need to adjust `max_token`.
 
 
 ## Note
