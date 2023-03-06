@@ -79,7 +79,7 @@ Module.register('MMM-OpenAI', {
       chat: {
         model: 'gpt-3.5-turbo',
         messages: [],
-        max_tokens: 4000,
+        max_tokens: 512,
         /* // You should know what you are doing.
         temperature: 1, // 0~2
         top_p: 0,
@@ -146,7 +146,7 @@ Module.register('MMM-OpenAI', {
     if (!this.lastResponse) return dom
     if (this.lastResponse.stealth) return dom
     let {error, response, request, options, responseTime} = this.lastResponse
-    if (error) return dom
+    //if (error) return dom
 
     let req = document.createElement('div')
     req.classList.add('prompt')
@@ -155,20 +155,34 @@ Module.register('MMM-OpenAI', {
     let res = document.createElement('div')
     res.classList.add('response')
 
-    if (options.method === 'TEXT') {
-      res.innerHTML = response.choices[0].text.replace(/^\n\n/, '').replaceAll('\n', '<br/>')
-      res.classList.add('responseText')
-    } else if (options.method === 'IMAGE') {
-      let url = (response.data[0]?.url) ? response.data[0]?.url : `data:image/png;base64,${response.data[0].b64_json}`
-      res.style.backgroundImage = `url("${url}")`
-      res.style.setProperty('--imageAreaHeight', this.config.imageAreaHeight)
-      res.classList.add('responseImage')
-    } else if (options.method === 'CHAT') {
-      res.innerHTML = response.choices[0].message.content
-      res.classList.add('responseChat')
+    if (error) {
+      res.innerHTML = error?.error?.message ?? error
+      res.classList.add('responseError')
+    } else {
+      if (options.method === 'TEXT') {
+        res.innerHTML = response.choices[0].text.replace(/^\n\n/, '').replaceAll('\n', '<br/>')
+        res.classList.add('responseText')
+      } else if (options.method === 'IMAGE') {
+        let url = (response.data[0]?.url) ? response.data[0]?.url : `data:image/png;base64,${response.data[0].b64_json}`
+        res.style.backgroundImage = `url("${url}")`
+        res.style.setProperty('--imageAreaHeight', this.config.imageAreaHeight)
+        res.classList.add('responseImage')
+      } else if (options.method === 'CHAT') {
+        res.innerHTML = response.choices[0].message.content
+        res.classList.add('responseChat')
+      }
     }
+
     dom.appendChild(req)
     dom.appendChild(res)
+    
+    if (response.usage) {
+      const {prompt_tokens, completion_tokens, total_tokens} = response.usage
+      let usg = document.createElement('div')
+      usg.classList.add('response', 'responseUsage')
+      usg.innerHTML = `TOKENS : Prompt ${prompt_tokens}, Completion ${completion_tokens}, Total ${total_tokens}`
+      dom.appendChild(usg)
+    }
 
     return dom
   },
@@ -196,12 +210,12 @@ Module.register('MMM-OpenAI', {
 
   command_chat: function(command, handler) {
     const newDialog = (handler, initPrompt = this.config.defaultChatInstruction) => {
-      handler.reply('TEXT', 'New dialog session starts.')
+      handler.say('TEXT', 'New dialog session starts.')
       this.tgDialog = [{
         role: 'system',
         content: initPrompt
       }]
-      handler.reply('TEXT', '**New Instruction** : ' + initPrompt)
+      handler.say('TEXT', '<b>New Iinitializing</b> ' + initPrompt, {parse_mode: 'HTML'})
     }
     if (!handler?.args?.[0]) {
       newDialog(handler)
@@ -282,14 +296,16 @@ Module.register('MMM-OpenAI', {
       if (payload.options?.id && this.requestPool.has(payload.options.id)) {
         let handler = this.requestPool.get(payload.options.id)
         if (payload.error) {
-          payload.response = null
+          //payload.response = payload.error?.error?.message ?? payload.error
           console.log('[OPENAI] Error:', payload.error)
         }
         if (typeof handler === 'function') {
           handler(payload)
         } else if (typeof handler?.reply === 'function') {
           if (payload.error) {
-            handler.reply('TEXT', 'Something wrong, see the log.')
+            let em = payload.error?.error?.message ?? 'Something wrong, see the log.'
+            console.log('[OPENAI] ERROR : ' + em )
+            handler.reply('TEXT', em)
           } else if (payload.options.method === 'IMAGE') {
             handler.reply('PHOTO_URL', payload.response.data[0].url, { caption: payload.request.prompt })
           } else if (payload.options.method === 'TEXT'){

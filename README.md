@@ -446,6 +446,15 @@ To continue this session, you may to deliver all the history between you and AI 
 
 
 ## History
+### 1.2.0 (2022-03-06)
+- ADDED : More kind error message (in console and the display, telegram, and the dev-console)
+- ADDED : Token usage on success in TEXT and CHAT.
+- FIXED : Reducing default `max_token` for chat. (Too many token limit may cause the error unexpected)
+
+![120_1](https://raw.githubusercontent.com/MMRIZE/public_ext_storage/main/MMM-OpenAI/oai_120_1.png)
+
+![120_2](https://raw.githubusercontent.com/MMRIZE/public_ext_storage/main/MMM-OpenAI/oai_120_2.png)
+
 ### 1.1.0 (2022-03-02)
 - ADDED : Chatting
 

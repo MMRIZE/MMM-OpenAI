@@ -28,7 +28,8 @@
 }
 
 .OpenAI .response.responseText,
-.OpenAI .response.responseChat {
+.OpenAI .response.responseChat,
+.OpenAI .response.responseError {
   background-image: url('/modules/MMM-OpenAI/resources/openai_bk.png');
   background-size: 32px 32px;
   background-position: top 5px left 5px;
@@ -44,6 +45,16 @@
   background-size: contain;
 }
 
+.OpenAI .response.responseError {
+  background-color: crimson;
+}
+
+.OpenAI .response.responseUsage {
+  text-align: center;
+  font-size: 70%;
+  background-color: gray;
+  color: white;
+}
 
 @keyframes blink {
   0% {
