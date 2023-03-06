@@ -46,9 +46,9 @@ module.exports = NodeHelper.create({
     try {
       response = await openai[jobMap[options.method]](request)
     } catch (error) {
-      console.log('error')
-      console.log(error)
-      e = error
+      console.log('[OPENAI] ERROR')
+      console.log("E_DATA", error.response.data)
+      e = error?.response?.data ?? error
     } finally {
       let r = {
         error: e,
