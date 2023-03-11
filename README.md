@@ -131,7 +131,7 @@ All the properties are omittable, and if omitted, a default value will be applie
 |`defaultChatInstruction`| text | Initial instruction of chatting session. You can give a character to AI |
 ## How to use
 ### 1. Using TelegramBot
-If you are using `MMM-TelegramBot` or `EXT-TelegramBot` (whatever), the commands would be added.
+If you are using `MMM-TelegramBot`, the commands would be added.
 
 - `/txtai YOUR_PROMPT` : To get text compliments from your prompt
 ```
